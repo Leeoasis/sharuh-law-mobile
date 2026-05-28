@@ -1,34 +1,40 @@
 # Legal Suise Mobile
 
-This repository contains the React Native mobile application for Legal Suise.
-
-## Project Overview
-Legal Suise Mobile is part of the Legal Suise suite, designed to provide legal services and client management on mobile devices. This app is built using React Native and integrates with the sharuh-law-frontend and sharuh-law-backend projects in this workspace.
+A React Native mobile application for Legal Suise, built with Expo. This app provides users with mobile access to legal services, dashboards, and communication tools.
 
 ## Features
-- User authentication
-- Client, Lawyer, and Admin dashboards
-- Notifications and messaging
-- Integration with backend services
 
-## Getting Started
-1. Clone the repository.
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Run the app:
-   ```bash
-   npx react-native run-android # or run-ios
-   ```
+### For Clients
+- 📱 View case progress
+- 📁 Access legal resources
+- 📅 View appointments and schedules
+- 👤 Manage profile and account settings
+- 🔒 Secure token-based authentication
 
-## Folder Structure
-- `sharuh-law-mobile/` - React Native mobile app
-- `sharuh-law-frontend/` - Web frontend (React)
-- `sharuh-law-backend/` - Backend (Rails)
+### For Lawyers
+- 📤 Upload legal resources
+- 📄 Upload case reports
+- 👥 View client lists
+- 🏷️ Generate invitation codes for clients
+- 📊 Dashboard with quick actions
 
-## Company
-Legal Suise
+### For Administrators
+- 👥 User management
+- 📊 System-wide reports and analytics
+- ⚙️ Administrative controls
 
-## License
-[MIT](LICENSE)
+## Tech Stack
+
+- **Framework**: React Native with Expo
+- **State Management**: Redux Toolkit
+- **Navigation**: React Navigation v6
+- **API Integration**: Axios
+- **Persistence**: Redux Persist + AsyncStorage
+- **UI Components**: Custom components with consistent theming
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- **Node.js** (v18 or higher)
+- **npm** or **yarn**

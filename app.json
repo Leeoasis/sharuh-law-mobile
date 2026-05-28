@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "Legal Suise Mobile",
+    "slug": "legal-suise-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F59E0B"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.legalsuise.mobile",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to upload images.",
+        "NSCameraUsageDescription": "This app needs access to your camera to take photos.",
+        "NSPhotoLibraryAddUsageDescription": "This app needs access to save photos to your library."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F59E0B"
+      },
+      "package": "com.legalsuise.mobile",
+      "permissions": [
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "CAMERA"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
