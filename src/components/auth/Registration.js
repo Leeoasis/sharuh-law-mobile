@@ -105,9 +105,10 @@ const filterGroups = (groups, search) => {
     .filter((group) => group.options.length > 0);
 };
 
-const referralPlans = [
-  { label: '1-10 referrals - R500 flat fee', value: '1-10' },
-  { label: '11-20 referrals - R1000 flat fee', value: '11-20' },
+const practitionerTiers = [
+  { label: 'Basic Platform - R1,500/month - up to 10 enquiries', value: 'basic' },
+  { label: 'Classic Platform - R2,500/month - up to 20 enquiries', value: 'classic' },
+  { label: 'Golden Platform - R3,500/month - up to 50 enquiries', value: 'golden' },
 ];
 
 const Registration = ({ navigation }) => {
@@ -129,7 +130,7 @@ const Registration = ({ navigation }) => {
     fidelity_fund_certificate: null,
     id_document: null,
     registration_fee_pop: null,
-    fnb_referral_plan: '1-10',
+    fnb_referral_plan: 'basic',
     fnb_mandate_account_holder: '',
     fnb_mandate_account_number: '',
     fnb_mandate_account_type: 'cheque',
@@ -139,6 +140,12 @@ const Registration = ({ navigation }) => {
     engagement_form: null,
     client_id_document: null,
     client_proof_of_address: null,
+    agreement_acceptances: {
+      practitioner_sla: false,
+      fee_schedule: false,
+      privacy_notice: false,
+      payment_mandate: false,
+    },
   });
 
   const dispatch = useDispatch();
@@ -273,6 +280,14 @@ const Registration = ({ navigation }) => {
           });
           return;
         }
+
+        if (Object.values(formData.agreement_acceptances).some((accepted) => !accepted)) {
+          Toast.show({
+            type: 'error',
+            text1: 'Accept all current LEGAL SUISE agreement terms',
+          });
+          return;
+        }
       }
 
       const data = new FormData();
@@ -285,6 +300,13 @@ const Registration = ({ navigation }) => {
           if (uploadFile) {
             data.append(`user[${key}]`, uploadFile);
           }
+          continue;
+        }
+
+        if (key === 'agreement_acceptances') {
+          Object.entries(value).forEach(([agreement, accepted]) => {
+            data.append(`user[agreement_acceptances][${agreement}]`, String(accepted));
+          });
           continue;
         }
 
@@ -415,7 +437,7 @@ const Registration = ({ navigation }) => {
                 onValueChange={(value) => handleChange('fnb_referral_plan', value)}
                 style={styles.picker}
               >
-                {referralPlans.map((plan) => (
+                {practitionerTiers.map((plan) => (
                   <Picker.Item key={plan.value} label={plan.label} value={plan.value} />
                 ))}
               </Picker>
@@ -466,9 +488,31 @@ const Registration = ({ navigation }) => {
                 {formData.fnb_debit_mandate_accepted ? <Text style={styles.checkboxTick}>OK</Text> : null}
               </View>
               <Text style={styles.checkboxText}>
-                I authorise Sharuh Law to submit this mandate to FNB and collect the selected referral plan fee at the end of each billing period.
+                I authorise LEGAL SUISE to collect lawful fees under the selected platform tier and payment mandate.
               </Text>
             </TouchableOpacity>
+
+            <View style={styles.infoPanel}>
+              <Text style={styles.infoTitle}>Practitioner agreement acceptance</Text>
+              {Object.keys(formData.agreement_acceptances).map((agreement) => (
+                <TouchableOpacity
+                  key={agreement}
+                  style={styles.checkboxRow}
+                  onPress={() => setFormData({
+                    ...formData,
+                    agreement_acceptances: {
+                      ...formData.agreement_acceptances,
+                      [agreement]: !formData.agreement_acceptances[agreement],
+                    },
+                  })}
+                >
+                  <View style={[styles.checkbox, formData.agreement_acceptances[agreement] && styles.checkboxChecked]}>
+                    {formData.agreement_acceptances[agreement] ? <Text style={styles.checkboxTick}>OK</Text> : null}
+                  </View>
+                  <Text style={styles.checkboxText}>I accept the current LEGAL SUISE {agreement.replaceAll('_', ' ')}.</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
             <TextInput
               style={styles.input}

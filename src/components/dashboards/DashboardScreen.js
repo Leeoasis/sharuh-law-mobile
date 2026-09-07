@@ -50,10 +50,18 @@ const COURTS = [
   'Constitutional Court',
 ];
 const CASE_TYPES = ['Criminal Law', 'Family Law', 'Corporate Law', 'Intellectual Property', 'Labor'];
-const EMPTY_CASE = { title: '', description: '', court: '', budget: '', case_type: '' };
+const EMPTY_CASE = {
+  title: '',
+  description: '',
+  court: '',
+  budget: '',
+  case_type: '',
+  public_user_terms_accepted: false,
+};
 const REFERRAL_PLANS = [
-  { key: '1-10', label: '1-10 referrals', amount: 500 },
-  { key: '11-20', label: '11-20 referrals', amount: 1000 },
+  { key: 'basic', label: 'Basic Platform - up to 10 enquiries', amount: 1500 },
+  { key: 'classic', label: 'Classic Platform - up to 20 enquiries', amount: 2500 },
+  { key: 'golden', label: 'Golden Platform - up to 50 enquiries', amount: 3500 },
 ];
 const EVENT_TYPES = ['Consultation', 'Court date', 'Filing deadline', 'Follow-up', 'Payment follow-up'];
 
@@ -133,7 +141,7 @@ function DashboardOverview({ role, profile, cases, availableCases, lawyers, noti
       <View style={styles.overview}>
         <StatCard label="Accepted" value={claimedCases.length} tone="green" />
         <StatCard label="Available" value={availableCases.length} tone="amber" />
-        <StatCard label="Billing" value={profile.fnb_referral_plan || profile.collection_plan || '1-10'} />
+        <StatCard label="Billing" value={profile.fnb_referral_plan || profile.collection_plan || 'basic'} />
       </View>
     );
   }
@@ -247,6 +255,7 @@ function ClientCases({ profile, cases, dispatch, loading }) {
   const set = (key) => (value) => setForm((current) => ({ ...current, [key]: value }));
   const submit = async () => {
     if (!form.title || !form.description) return showError('Add a title and description');
+    if (!editingId && !form.public_user_terms_accepted) return showError('Accept the public-user terms before submitting');
     try {
       if (editingId) {
         await dispatch(updateCase({ userId: profile.id, caseId: editingId, caseData: form })).unwrap();
@@ -273,6 +282,12 @@ function ClientCases({ profile, cases, dispatch, loading }) {
     <Text style={styles.sectionTitle}>{editingId ? 'Edit Case' : 'Describe Your Case'}</Text>
     <Field label="Title" value={form.title} onChangeText={set('title')} />
     <Field label="Description" value={form.description} onChangeText={set('description')} multiline />
+    {!editingId && <TouchableOpacity style={styles.checkboxRow} onPress={() => set('public_user_terms_accepted')(!form.public_user_terms_accepted)}>
+      <View style={[styles.checkbox, form.public_user_terms_accepted && styles.checkboxChecked]}>
+        {form.public_user_terms_accepted ? <Text style={styles.checkboxTick}>OK</Text> : null}
+      </View>
+      <Text style={styles.checkboxText}>I accept the current LEGAL SUISE public-user engagement terms.</Text>
+    </TouchableOpacity>}
     <Text style={styles.label}>Preferred court</Text>
     <View style={styles.picker}><Picker selectedValue={form.court} onValueChange={set('court')}>
       <Picker.Item label="Select court" value="" />{COURTS.map((item) => <Picker.Item key={item} label={item} value={item} />)}
@@ -531,7 +546,7 @@ export default function DashboardScreen({ role }) {
   const [tab, setTab] = useState(tabsByRole[role][0]);
   const [refreshing, setRefreshing] = useState(false);
   const [feeCase, setFeeCase] = useState(null);
-  const [collectionPlan, setCollectionPlan] = useState('1-10');
+  const [collectionPlan, setCollectionPlan] = useState('basic');
   const userId = profile.id || authUser?.id;
   const displayName = profile.name || authUser?.name || 'Dashboard';
 
@@ -551,7 +566,7 @@ export default function DashboardScreen({ role }) {
   }, [dispatch, profile.id, role]);
   useEffect(() => {
     if (role !== 'lawyer') return;
-    setCollectionPlan(profile.fnb_referral_plan || profile.collection_plan || '1-10');
+    setCollectionPlan(profile.fnb_referral_plan || profile.collection_plan || 'basic');
   }, [profile.collection_plan, profile.fnb_referral_plan, role]);
   useEffect(() => {
     if (!userId) return undefined;

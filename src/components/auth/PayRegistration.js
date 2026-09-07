@@ -8,8 +8,9 @@ import { toSafeUploadAsset, validateUploadAsset } from '../../utils/uploadSecuri
 
 const REGISTRATION_FEE = 250;
 const REFERRAL_PLANS = [
-  { key: '1-10', label: '1-10 referrals', amount: 500 },
-  { key: '11-20', label: '11-20 referrals', amount: 1000 },
+  { key: 'basic', label: 'Basic Platform - up to 10 enquiries', amount: 1500 },
+  { key: 'classic', label: 'Classic Platform - up to 20 enquiries', amount: 2500 },
+  { key: 'golden', label: 'Golden Platform - up to 50 enquiries', amount: 3500 },
 ];
 
 const PayRegistration = () => {
