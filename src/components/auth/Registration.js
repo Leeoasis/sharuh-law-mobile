@@ -5,22 +5,109 @@ import { fetchreg } from '../../redux/auth/registerSlice';
 import Toast from 'react-native-toast-message';
 import { Picker } from '@react-native-picker/picker';
 import * as DocumentPicker from 'expo-document-picker';
+import AppTopBar from '../common/AppTopBar';
+import { toSafeUploadAsset, validateUploadAsset } from '../../utils/uploadSecurity';
 
-const courts = [
-  'CCMA/Bargaining Council (Arbitration)',
-  'District Magistrate Court',
-  'Regional Magistrate Court',
-  'High Court/Labour Court',
-  'Supreme Court of Appeal/Labour Appeal Court',
-  'Constitutional Court',
+const courtGroups = [
+  {
+    category: 'Superior Courts',
+    options: [
+      'Constitutional Court',
+      'Supreme Court of Appeal',
+      'High Court: Eastern Cape Division - Bhisho',
+      'High Court: Eastern Cape Division - Makhanda',
+      'High Court: Eastern Cape Local Division - Gqeberha',
+      'High Court: Eastern Cape Local Division - Mthatha',
+      'High Court: Free State Division - Bloemfontein',
+      'High Court: Gauteng Division - Pretoria',
+      'High Court: Gauteng Local Division - Johannesburg',
+      'High Court: KwaZulu-Natal Division - Pietermaritzburg',
+      'High Court: KwaZulu-Natal Local Division - Durban',
+      'High Court: Limpopo Division - Polokwane',
+      'High Court: Limpopo Local Division - Thohoyandou',
+      'High Court: Mpumalanga Division - Mbombela',
+      'High Court: Mpumalanga Local Division - Middelburg',
+      'High Court: Northern Cape Division - Kimberley',
+      'High Court: North West Division - Mahikeng',
+      'High Court: Western Cape Division - Cape Town',
+    ],
+  },
+  {
+    category: 'Specialist Courts',
+    options: [
+      'Labour Court',
+      'Labour Appeal Court',
+      'Land Court / Land Claims Court',
+      'Electoral Court',
+      'Competition Appeal Court',
+      'Tax Court',
+      'Equality Court',
+      'Small Claims Court',
+      'Children\'s Court',
+      'Maintenance Court',
+      'Sexual Offences Court',
+      'Commercial Crimes Court',
+    ],
+  },
+  {
+    category: 'Magistrates Courts',
+    options: [
+      'District Magistrate Court - Eastern Cape',
+      'District Magistrate Court - Free State',
+      'District Magistrate Court - Gauteng',
+      'District Magistrate Court - KwaZulu-Natal',
+      'District Magistrate Court - Limpopo',
+      'District Magistrate Court - Mpumalanga',
+      'District Magistrate Court - Northern Cape',
+      'District Magistrate Court - North West',
+      'District Magistrate Court - Western Cape',
+      'Regional Magistrate Court - Eastern Cape',
+      'Regional Magistrate Court - Free State',
+      'Regional Magistrate Court - Gauteng',
+      'Regional Magistrate Court - KwaZulu-Natal',
+      'Regional Magistrate Court - Limpopo',
+      'Regional Magistrate Court - Mpumalanga',
+      'Regional Magistrate Court - Northern Cape',
+      'Regional Magistrate Court - North West',
+      'Regional Magistrate Court - Western Cape',
+    ],
+  },
+  {
+    category: 'Forums and Tribunals',
+    options: [
+      'CCMA',
+      'Bargaining Council',
+      'Companies Tribunal',
+      'Consumer Tribunal',
+      'Rental Housing Tribunal',
+      'Appeal Board / Administrative Tribunal',
+    ],
+  },
 ];
 
-const expertiseAreas = [
-  'Criminal Law',
-  'Family Law',
-  'Corporate Law',
-  'Intellectual Property',
-  'Labor Law',
+const expertiseGroups = [
+  { category: 'Litigation and Dispute Resolution', options: ['Civil Litigation', 'Criminal Law', 'Commercial Litigation', 'Constitutional Law', 'Administrative Law', 'Appeals and Reviews', 'Alternative Dispute Resolution', 'Arbitration', 'Mediation', 'Debt Collection'] },
+  { category: 'People and Family', options: ['Family Law', 'Divorce Law', 'Child Law', 'Maintenance Law', 'Domestic Violence', 'Deceased Estates', 'Wills and Trusts', 'Immigration Law', 'Personal Injury Law', 'Medical Negligence'] },
+  { category: 'Business and Commercial', options: ['Corporate Law', 'Commercial Law', 'Contract Law', 'Company Secretarial', 'Mergers and Acquisitions', 'Insolvency and Business Rescue', 'Banking and Finance Law', 'Insurance Law', 'Tax Law', 'Competition Law', 'Consumer Protection'] },
+  { category: 'Property and Work', options: ['Property Law', 'Conveyancing', 'Real Estate Law', 'Land Reform', 'Sectional Title Law', 'Construction Law', 'Labour Law', 'Employment Law', 'Pension Law'] },
+  { category: 'Regulated and Specialist', options: ['Intellectual Property', 'Information Technology Law', 'Data Protection and POPIA', 'Media and Entertainment Law', 'Environmental Law', 'Mining Law', 'Energy Law', 'Transport Law', 'Maritime Law', 'Aviation Law', 'Public Procurement', 'Municipal Law', 'Education Law', 'Healthcare Law', 'Sports Law'] },
+];
+
+const filterGroups = (groups, search) => {
+  const query = search.trim().toLowerCase();
+  if (!query) return groups;
+
+  return groups
+    .map((group) => ({
+      ...group,
+      options: group.options.filter((option) => `${group.category} ${option}`.toLowerCase().includes(query)),
+    }))
+    .filter((group) => group.options.length > 0);
+};
+
+const referralPlans = [
+  { label: '1-10 referrals - R500 flat fee', value: '1-10' },
+  { label: '11-20 referrals - R1000 flat fee', value: '11-20' },
 ];
 
 const Registration = ({ navigation }) => {
@@ -35,12 +122,20 @@ const Registration = ({ navigation }) => {
     license_number: '',
     experience_years: '',
     rate: '',
-    preferred_court: '',
-    areas_of_expertise: '',
+    preferred_court: [],
+    areas_of_expertise: [],
     admission_enrollment_order: null,
     good_standing_letter: null,
     fidelity_fund_certificate: null,
     id_document: null,
+    registration_fee_pop: null,
+    fnb_referral_plan: '1-10',
+    fnb_mandate_account_holder: '',
+    fnb_mandate_account_number: '',
+    fnb_mandate_account_type: 'cheque',
+    fnb_mandate_branch_code: '250655',
+    fnb_mandate_bank_name: 'FNB',
+    fnb_debit_mandate_accepted: false,
     engagement_form: null,
     client_id_document: null,
     client_proof_of_address: null,
@@ -48,23 +143,69 @@ const Registration = ({ navigation }) => {
 
   const dispatch = useDispatch();
   const { isLoading } = useSelector((state) => state.sign_up);
+  const [courtSearch, setCourtSearch] = useState('');
+  const [expertiseSearch, setExpertiseSearch] = useState('');
+  const [openSelector, setOpenSelector] = useState(null);
+  const filteredCourtGroups = filterGroups(courtGroups, courtSearch);
+  const filteredExpertiseGroups = filterGroups(expertiseGroups, expertiseSearch);
 
   const handleChange = (name, value) => {
-    setFormData({ ...formData, [name]: value });
+    const nextValue = ['fnb_mandate_account_number', 'fnb_mandate_branch_code'].includes(name)
+      ? String(value).replace(/\D/g, '')
+      : value;
+    setFormData({ ...formData, [name]: nextValue });
   };
 
   const pickDocument = async (fieldName) => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: '*/*',
+        type: ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'],
       });
       if (result.assets && result.assets[0]) {
-        setFormData({ ...formData, [fieldName]: result.assets[0] });
+        const error = validateUploadAsset(result.assets[0]);
+        if (error) {
+          Toast.show({ type: 'error', text1: error });
+          return;
+        }
+        setFormData({ ...formData, [fieldName]: toSafeUploadAsset(result.assets[0]) });
         Toast.show({ type: 'success', text1: 'Document selected' });
       }
     } catch (error) {
       Toast.show({ type: 'error', text1: 'Document picker cancelled' });
     }
+  };
+
+  const toggleSelection = (field, value) => {
+    setFormData((current) => {
+      const selected = current[field];
+      const next = selected.includes(value)
+        ? selected.filter((item) => item !== value)
+        : [...selected, value];
+
+      return { ...current, [field]: next };
+    });
+  };
+
+  const toUploadFile = async (value) => {
+    if (!value || !value.uri) return null;
+
+    if (Platform.OS === 'web') {
+      try {
+        const response = await fetch(value.uri);
+        const blob = await response.blob();
+        return new File([blob], value.name || 'document.pdf', {
+          type: value.mimeType || value.type || 'application/pdf',
+        });
+      } catch (error) {
+        console.warn('Unable to convert file to web File object:', error);
+      }
+    }
+
+    return {
+      uri: value.uri,
+      type: value.mimeType || value.type || 'application/pdf',
+      name: value.name || 'document.pdf',
+    };
   };
 
   const handleSubmit = async () => {
@@ -86,79 +227,68 @@ const Registration = ({ navigation }) => {
         return;
       }
 
-      const data = new FormData();
-      
-      // Add non-file fields
-      data.append('user[name]', formData.name);
-      data.append('user[email]', formData.email);
-      data.append('user[password]', formData.password);
-      data.append('user[password_confirmation]', formData.password_confirmation);
-      data.append('user[role]', formData.role);
-      data.append('user[phone_number]', formData.phone_number || '');
+      if (formData.role === 'lawyer' && !formData.registration_fee_pop) {
+        Toast.show({
+          type: 'error',
+          text1: 'Upload POP for the EFT registration fee',
+        });
+        return;
+      }
 
-      // Add lawyer-specific fields
       if (formData.role === 'lawyer') {
-        data.append('user[license_number]', formData.license_number || '');
-        data.append('user[practice_address]', formData.practice_address || '');
-        data.append('user[experience_years]', formData.experience_years || '');
-        data.append('user[rate]', formData.rate || '');
-        data.append('user[preferred_court]', formData.preferred_court || '');
-        data.append('user[areas_of_expertise]', formData.areas_of_expertise || '');
+        if (formData.preferred_court.length === 0) {
+          Toast.show({
+            type: 'error',
+            text1: 'Select at least one court',
+          });
+          return;
+        }
 
-        // Add file fields for lawyer
-        if (formData.admission_enrollment_order?.uri) {
-          data.append('user[admission_enrollment_order]', {
-            uri: formData.admission_enrollment_order.uri,
-            type: formData.admission_enrollment_order.mimeType || 'application/octet-stream',
-            name: formData.admission_enrollment_order.name,
+        if (formData.areas_of_expertise.length === 0) {
+          Toast.show({
+            type: 'error',
+            text1: 'Select at least one expertise area',
           });
+          return;
         }
-        if (formData.good_standing_letter?.uri) {
-          data.append('user[good_standing_letter]', {
-            uri: formData.good_standing_letter.uri,
-            type: formData.good_standing_letter.mimeType || 'application/octet-stream',
-            name: formData.good_standing_letter.name,
+
+        const missingMandate =
+          !formData.fnb_mandate_account_holder ||
+          !formData.fnb_mandate_account_number ||
+          !formData.fnb_mandate_account_type ||
+          !formData.fnb_mandate_branch_code;
+
+        if (missingMandate) {
+          Toast.show({
+            type: 'error',
+            text1: 'Complete the FNB mandate details',
           });
+          return;
         }
-        if (formData.fidelity_fund_certificate?.uri) {
-          data.append('user[fidelity_fund_certificate]', {
-            uri: formData.fidelity_fund_certificate.uri,
-            type: formData.fidelity_fund_certificate.mimeType || 'application/octet-stream',
-            name: formData.fidelity_fund_certificate.name,
+
+        if (!formData.fnb_debit_mandate_accepted) {
+          Toast.show({
+            type: 'error',
+            text1: 'Accept the FNB debit mandate',
           });
-        }
-        if (formData.id_document?.uri) {
-          data.append('user[id_document]', {
-            uri: formData.id_document.uri,
-            type: formData.id_document.mimeType || 'application/octet-stream',
-            name: formData.id_document.name,
-          });
+          return;
         }
       }
 
-      // Add client-specific fields
-      if (formData.role === 'client') {
-        if (formData.engagement_form?.uri) {
-          data.append('user[engagement_form]', {
-            uri: formData.engagement_form.uri,
-            type: formData.engagement_form.mimeType || 'application/octet-stream',
-            name: formData.engagement_form.name,
-          });
+      const data = new FormData();
+
+      for (const [key, value] of Object.entries(formData)) {
+        if (value === null || value === undefined) continue;
+
+        if (value && typeof value === 'object' && 'uri' in value) {
+          const uploadFile = await toUploadFile(value);
+          if (uploadFile) {
+            data.append(`user[${key}]`, uploadFile);
+          }
+          continue;
         }
-        if (formData.client_id_document?.uri) {
-          data.append('user[client_id_document]', {
-            uri: formData.client_id_document.uri,
-            type: formData.client_id_document.mimeType || 'application/octet-stream',
-            name: formData.client_id_document.name,
-          });
-        }
-        if (formData.client_proof_of_address?.uri) {
-          data.append('user[client_proof_of_address]', {
-            uri: formData.client_proof_of_address.uri,
-            type: formData.client_proof_of_address.mimeType || 'application/octet-stream',
-            name: formData.client_proof_of_address.name,
-          });
-        }
+
+        data.append(`user[${key}]`, Array.isArray(value) ? value.join(', ') : value);
       }
 
       console.log('=== Registration Form Data ===');
@@ -176,7 +306,7 @@ const Registration = ({ navigation }) => {
           });
 
           if (user.role === 'lawyer') {
-            navigation.navigate('PayRegistration');
+            navigation.navigate('PendingApproval');
           } else {
             navigation.navigate('Login');
           }
@@ -187,9 +317,12 @@ const Registration = ({ navigation }) => {
           console.error('Error message:', error?.message);
           console.error('Error response:', error?.response?.data);
           
-          const errorMessage = error?.response?.data?.message || 
-                              error?.message || 
-                              'Registration failed. Please review your details.';
+          const errorMessage =
+            error?.response?.data?.message ||
+            error?.message ||
+            error?.error ||
+            (Array.isArray(error?.errors) ? error.errors.join(', ') : null) ||
+            'Registration failed. Please review your details.';
           
           Toast.show({
             type: 'error',
@@ -209,18 +342,18 @@ const Registration = ({ navigation }) => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.formContainer}>
-        <Text style={styles.title}>Create Your Account</Text>
+    <View style={styles.screen}>
+      <AppTopBar showBack />
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.formContainer}>
+          <Text style={styles.eyebrow}>New account</Text>
+          <Text style={styles.title}>Create Your Account</Text>
 
         {/* Common Fields */}
-        <TextInput
-          style={styles.input}
-          placeholder="Full Name"
-          value={formData.name}
-          onChangeText={(value) => handleChange('name', value)}
-        />
-
         <TextInput
           style={styles.input}
           placeholder="Email"
@@ -248,10 +381,9 @@ const Registration = ({ navigation }) => {
 
         <TextInput
           style={styles.input}
-          placeholder="Phone Number"
-          value={formData.phone_number}
-          onChangeText={(value) => handleChange('phone_number', value)}
-          keyboardType="phone-pad"
+          placeholder="Full Name"
+          value={formData.name}
+          onChangeText={(value) => handleChange('name', value)}
         />
 
         <View style={styles.pickerContainer}>
@@ -270,11 +402,87 @@ const Registration = ({ navigation }) => {
         {formData.role === 'lawyer' && (
           <>
             <Text style={styles.sectionTitle}>Lawyer Information</Text>
+            <View style={styles.infoPanel}>
+              <Text style={styles.infoTitle}>FNB collection billing</Text>
+              <Text style={styles.infoText}>
+                Select the referral package you want FNB to collect as a flat fee from your account at month end.
+              </Text>
+            </View>
+            <View style={styles.pickerContainer}>
+              <Text style={styles.label}>Referral package:</Text>
+              <Picker
+                selectedValue={formData.fnb_referral_plan}
+                onValueChange={(value) => handleChange('fnb_referral_plan', value)}
+                style={styles.picker}
+              >
+                {referralPlans.map((plan) => (
+                  <Picker.Item key={plan.value} label={plan.label} value={plan.value} />
+                ))}
+              </Picker>
+            </View>
+            <Text style={styles.sectionTitle}>FNB Debit Mandate</Text>
+            <Text style={styles.infoText}>
+              Complete this mandate as part of registration. Admin will review it once with your POP and legal documents.
+            </Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Account Holder Name"
+              value={formData.fnb_mandate_account_holder}
+              onChangeText={(value) => handleChange('fnb_mandate_account_holder', value)}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="FNB Account Number"
+              value={formData.fnb_mandate_account_number}
+              onChangeText={(value) => handleChange('fnb_mandate_account_number', value)}
+              keyboardType="number-pad"
+              maxLength={12}
+            />
+            <View style={styles.pickerContainer}>
+              <Text style={styles.label}>Account Type:</Text>
+              <Picker
+                selectedValue={formData.fnb_mandate_account_type}
+                onValueChange={(value) => handleChange('fnb_mandate_account_type', value)}
+                style={styles.picker}
+              >
+                <Picker.Item label="Cheque / Current" value="cheque" />
+                <Picker.Item label="Savings" value="savings" />
+                <Picker.Item label="Business" value="business" />
+              </Picker>
+            </View>
+            <TextInput
+              style={styles.input}
+              placeholder="Branch Code"
+              value={formData.fnb_mandate_branch_code}
+              onChangeText={(value) => handleChange('fnb_mandate_branch_code', value)}
+              keyboardType="number-pad"
+              maxLength={6}
+            />
+            <TouchableOpacity
+              style={styles.checkboxRow}
+              onPress={() => handleChange('fnb_debit_mandate_accepted', !formData.fnb_debit_mandate_accepted)}
+            >
+              <View style={[styles.checkbox, formData.fnb_debit_mandate_accepted && styles.checkboxChecked]}>
+                {formData.fnb_debit_mandate_accepted ? <Text style={styles.checkboxTick}>OK</Text> : null}
+              </View>
+              <Text style={styles.checkboxText}>
+                I authorise Sharuh Law to submit this mandate to FNB and collect the selected referral plan fee at the end of each billing period.
+              </Text>
+            </TouchableOpacity>
+
             <TextInput
               style={styles.input}
               placeholder="License Number"
               value={formData.license_number}
               onChangeText={(value) => handleChange('license_number', value)}
+            />
+
+            <TextInput
+              style={styles.input}
+              placeholder="Phone Number"
+              value={formData.phone_number}
+              onChangeText={(value) => handleChange('phone_number', value)}
+              keyboardType="phone-pad"
             />
 
             <TextInput
@@ -300,35 +508,101 @@ const Registration = ({ navigation }) => {
               keyboardType="decimal-pad"
             />
 
-            <View style={styles.pickerContainer}>
-              <Text style={styles.label}>Preferred Court:</Text>
-              <Picker
-                selectedValue={formData.preferred_court}
-                onValueChange={(value) => handleChange('preferred_court', value)}
-                style={styles.picker}
-              >
-                <Picker.Item label="Select Preferred Court" value="" />
-                {courts.map((court, index) => (
-                  <Picker.Item key={index} label={court} value={court} />
+            <Text style={styles.sectionTitle}>Courts You Appear In</Text>
+            <TouchableOpacity
+              style={styles.dropdownButton}
+              onPress={() => setOpenSelector(openSelector === 'courts' ? null : 'courts')}
+            >
+              <Text style={formData.preferred_court.length ? styles.dropdownValue : styles.dropdownPlaceholder}>
+                {formData.preferred_court.length ? `${formData.preferred_court.length} selected` : 'Select courts'}
+              </Text>
+              <View style={[styles.dropdownActionBox, openSelector === 'courts' && styles.dropdownActionOpen]}>
+                <Text style={styles.dropdownAction}>⌄</Text>
+              </View>
+            </TouchableOpacity>
+            {formData.preferred_court.length > 0 && (
+              <Text style={styles.selectedSummary}>{formData.preferred_court.slice(0, 3).join(', ')}{formData.preferred_court.length > 3 ? ` +${formData.preferred_court.length - 3} more` : ''}</Text>
+            )}
+            {openSelector === 'courts' && (
+              <View style={styles.selectionPanel}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Filter courts by name or category"
+                  value={courtSearch}
+                  onChangeText={setCourtSearch}
+                />
+                {filteredCourtGroups.map((group) => (
+                  <View key={group.category} style={styles.selectionGroup}>
+                    <Text style={styles.groupTitle}>{group.category}</Text>
+                    {group.options.map((court) => {
+                      const selected = formData.preferred_court.includes(court);
+                      return (
+                        <TouchableOpacity
+                          key={court}
+                          style={[styles.optionRow, selected && styles.optionRowSelected]}
+                          onPress={() => toggleSelection('preferred_court', court)}
+                        >
+                          <Text style={[styles.optionText, selected && styles.optionTextSelected]}>{court}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
                 ))}
-              </Picker>
-            </View>
+              </View>
+            )}
 
-            <View style={styles.pickerContainer}>
-              <Text style={styles.label}>Area of Expertise:</Text>
-              <Picker
-                selectedValue={formData.areas_of_expertise}
-                onValueChange={(value) => handleChange('areas_of_expertise', value)}
-                style={styles.picker}
-              >
-                <Picker.Item label="Select Area of Expertise" value="" />
-                {expertiseAreas.map((area, index) => (
-                  <Picker.Item key={index} label={area} value={area} />
+            <Text style={styles.sectionTitle}>Areas of Expertise</Text>
+            <TouchableOpacity
+              style={styles.dropdownButton}
+              onPress={() => setOpenSelector(openSelector === 'expertise' ? null : 'expertise')}
+            >
+              <Text style={formData.areas_of_expertise.length ? styles.dropdownValue : styles.dropdownPlaceholder}>
+                {formData.areas_of_expertise.length ? `${formData.areas_of_expertise.length} selected` : 'Select expertise areas'}
+              </Text>
+              <View style={[styles.dropdownActionBox, openSelector === 'expertise' && styles.dropdownActionOpen]}>
+                <Text style={styles.dropdownAction}>⌄</Text>
+              </View>
+            </TouchableOpacity>
+            {formData.areas_of_expertise.length > 0 && (
+              <Text style={styles.selectedSummary}>{formData.areas_of_expertise.slice(0, 3).join(', ')}{formData.areas_of_expertise.length > 3 ? ` +${formData.areas_of_expertise.length - 3} more` : ''}</Text>
+            )}
+            {openSelector === 'expertise' && (
+              <View style={styles.selectionPanel}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Filter expertise areas"
+                  value={expertiseSearch}
+                  onChangeText={setExpertiseSearch}
+                />
+                {filteredExpertiseGroups.map((group) => (
+                  <View key={group.category} style={styles.selectionGroup}>
+                    <Text style={styles.groupTitle}>{group.category}</Text>
+                    {group.options.map((area) => {
+                      const selected = formData.areas_of_expertise.includes(area);
+                      return (
+                        <TouchableOpacity
+                          key={area}
+                          style={[styles.optionRow, selected && styles.optionRowSelected]}
+                          onPress={() => toggleSelection('areas_of_expertise', area)}
+                        >
+                          <Text style={[styles.optionText, selected && styles.optionTextSelected]}>{area}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
                 ))}
-              </Picker>
-            </View>
+              </View>
+            )}
 
             <Text style={styles.sectionTitle}>Legal Documents</Text>
+            <TouchableOpacity
+              style={styles.documentButton}
+              onPress={() => pickDocument('registration_fee_pop')}
+            >
+              <Text style={styles.documentButtonText}>
+                {formData.registration_fee_pop ? 'POP for registration fee selected' : 'Upload POP for EFT registration fee'}
+              </Text>
+            </TouchableOpacity>
             <TouchableOpacity
               style={styles.documentButton}
               onPress={() => pickDocument('admission_enrollment_order')}
@@ -413,13 +687,23 @@ const Registration = ({ navigation }) => {
         <TouchableOpacity onPress={() => navigation.navigate('Login')}>
           <Text style={styles.link}>Already have an account? Login</Text>
         </TouchableOpacity>
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  scrollView: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
   container: {
+    flexGrow: 1,
     paddingHorizontal: 20,
     paddingVertical: 30,
   },
@@ -430,9 +714,16 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 30,
+    marginBottom: 24,
     color: '#1a1a1a',
-    textAlign: 'center',
+  },
+  eyebrow: {
+    color: '#b8860b',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginBottom: 6,
   },
   sectionTitle: {
     fontSize: 16,
@@ -484,6 +775,138 @@ const styles = StyleSheet.create({
     color: '#b8860b',
     fontWeight: '500',
     textAlign: 'center',
+  },
+  infoPanel: {
+    backgroundColor: '#f0fdf4',
+    borderColor: '#bbf7d0',
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 15,
+  },
+  infoTitle: {
+    color: '#166534',
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  infoText: {
+    color: '#166534',
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    marginBottom: 15,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#b8860b',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  checkboxChecked: {
+    backgroundColor: '#b8860b',
+  },
+  checkboxTick: {
+    color: '#fff',
+    fontWeight: '800',
+  },
+  checkboxText: {
+    flex: 1,
+    color: '#374151',
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  dropdownButton: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 13,
+    marginBottom: 8,
+    backgroundColor: '#f9f9f9',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  dropdownValue: {
+    color: '#111827',
+    fontWeight: '700',
+    flex: 1,
+  },
+  dropdownPlaceholder: {
+    color: '#6b7280',
+    flex: 1,
+  },
+  dropdownActionBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 12,
+  },
+  dropdownActionOpen: {
+    transform: [{ rotate: '180deg' }],
+  },
+  dropdownAction: {
+    color: '#7c5a02',
+    fontWeight: '900',
+    fontSize: 24,
+    lineHeight: 24,
+  },
+  selectedSummary: {
+    color: '#4b5563',
+    fontSize: 12,
+    lineHeight: 18,
+    marginBottom: 10,
+  },
+  selectionPanel: {
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 15,
+    backgroundColor: '#fff',
+  },
+  selectionGroup: {
+    marginBottom: 12,
+  },
+  groupTitle: {
+    color: '#374151',
+    fontSize: 13,
+    fontWeight: '800',
+    marginBottom: 8,
+  },
+  optionRow: {
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
+    paddingVertical: 9,
+    paddingHorizontal: 10,
+    marginBottom: 7,
+    backgroundColor: '#f9fafb',
+  },
+  optionRowSelected: {
+    borderColor: '#b8860b',
+    backgroundColor: '#fff7d6',
+  },
+  optionText: {
+    color: '#374151',
+    fontSize: 13,
+  },
+  optionTextSelected: {
+    color: '#7c5a02',
+    fontWeight: '800',
   },
   button: {
     backgroundColor: '#b8860b',

@@ -4,6 +4,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import authReducer from './auth/authSlice';
 import loginReducer from './auth/loginSlice';
 import registerReducer from './auth/registerSlice';
+import userReducer from './features/userSlice';
+import caseReducer from './features/caseSlice';
+import depositReducer from './features/depositSlice';
 
 const persistConfig = {
   key: 'root',
@@ -18,6 +21,9 @@ export const store = configureStore({
     auth: persistedAuthReducer,
     login: loginReducer,
     sign_up: registerReducer,
+    user: userReducer,
+    cases: caseReducer,
+    deposit: depositReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

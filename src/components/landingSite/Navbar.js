@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Platform, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,6 +9,10 @@ const Navbar = () => {
   const route = useRoute();
   const insets = useSafeAreaInsets();
 
+  if (Platform.OS === 'web') {
+    return null;
+  }
+
   const tabs = [
     { label: 'Home', routeName: 'Welcome', icon: 'home-outline', activeIcon: 'home' },
     { label: 'About', routeName: 'About', icon: 'information-circle-outline', activeIcon: 'information-circle' },
@@ -16,7 +20,7 @@ const Navbar = () => {
   ];
 
   return (
-    <View style={[styles.container, { bottom: Math.max(insets.bottom, 10) }]}>
+    <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 8) }]}>
       {tabs.map((tab) => {
         const isActive = route.name === tab.routeName;
         return (
@@ -49,28 +53,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    backgroundColor: 'rgba(17, 24, 39, 0.98)',
+    backgroundColor: '#111827',
     borderTopWidth: 1,
-    borderTopColor: '#374151',
-    paddingVertical: 6,
-    paddingHorizontal: 0,
+    borderTopColor: '#2f3a4b',
+    paddingTop: 6,
+    paddingHorizontal: 6,
     shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 8,
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
+    elevation: 12,
     zIndex: 100,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 2,
-    paddingVertical: 10,
+    gap: 3,
+    paddingVertical: 8,
     paddingHorizontal: 12,
+    borderRadius: 10,
   },
   tabActive: {
-    borderTopWidth: 3,
-    borderTopColor: '#fbbf24',
+    backgroundColor: 'rgba(251, 191, 36, 0.12)',
   },
   tabText: {
     color: '#9ca3af',

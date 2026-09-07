@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ImageBackground, Image } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import Navbar from './Navbar';
-import Footer from './Footer';
+import AppTopBar from '../common/AppTopBar';
 
 const Contact = ({ navigation }) => {
-  const insets = useSafeAreaInsets();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -51,14 +49,7 @@ const Contact = ({ navigation }) => {
 
   return (
     <View style={styles.screen}>
-      <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-        <Image
-          source={require('../../../assets/logo.png')}
-          style={styles.topLogo}
-          resizeMode="contain"
-        />
-        <Text style={styles.topBarTitle}>Legal Suise</Text>
-      </View>
+      <AppTopBar />
       <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
 
       {/* Hero Section */}
@@ -222,7 +213,6 @@ const Contact = ({ navigation }) => {
         </View>
       </View>
 
-      <Footer />
       </ScrollView>
       <Navbar />
     </View>
@@ -240,26 +230,6 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingBottom: 72,
-  },
-  topBar: {
-    backgroundColor: 'rgba(17, 24, 39, 0.96)',
-    borderBottomWidth: 1,
-    borderBottomColor: '#374151',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    paddingBottom: 8,
-  },
-  topLogo: {
-    width: 52,
-    height: 24,
-  },
-  topBarTitle: {
-    color: '#fbbf24',
-    fontSize: 18,
-    fontWeight: '700',
-    letterSpacing: 0.3,
   },
   hero: {
     height: 200,

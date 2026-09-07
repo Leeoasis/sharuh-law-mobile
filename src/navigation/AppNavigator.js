@@ -23,6 +23,12 @@ const Stack = createStackNavigator();
 
 export default function AppNavigator() {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const lawyerHasRegistrationPayment =
+    user?.registration_fee_paid ||
+    user?.registration_fee_pop_submitted ||
+    user?.registration_fee_pop ||
+    user?.registration_pop ||
+    user?.proof_of_payment;
 
   return (
     <NavigationContainer>
@@ -49,7 +55,13 @@ export default function AppNavigator() {
             {user?.role === 'client' && (
               <Stack.Screen name="ClientDashboard" component={ClientDashboard} />
             )}
-            {user?.role === 'lawyer' && (
+            {user?.role === 'lawyer' && !lawyerHasRegistrationPayment && (
+              <Stack.Screen name="PayRegistration" component={PayRegistration} />
+            )}
+            {user?.role === 'lawyer' && lawyerHasRegistrationPayment && !user.approved && (
+              <Stack.Screen name="PendingApproval" component={PendingApproval} />
+            )}
+            {user?.role === 'lawyer' && lawyerHasRegistrationPayment && user.approved && (
               <Stack.Screen name="LawyerDashboard" component={LawyerDashboard} />
             )}
           </>

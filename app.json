@@ -2,6 +2,7 @@
   "expo": {
     "name": "Legal Suise Mobile",
     "slug": "legal-suise-mobile",
+    "scheme": "legal-suise",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -34,6 +35,9 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-font"
+    ]
   }
 }

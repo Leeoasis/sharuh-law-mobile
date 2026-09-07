@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 
 import { useDispatch } from 'react-redux';
 import { fetchlogin } from '../../redux/auth/loginSlice';
 import Toast from 'react-native-toast-message';
+import AppTopBar from '../common/AppTopBar';
 
 const Login = ({ navigation }) => {
   const [formData, setFormData] = useState({
@@ -21,7 +22,8 @@ const Login = ({ navigation }) => {
       if (res.type !== 'login/fetchlogin/fulfilled') {
         Toast.show({
           type: 'error',
-          text1: 'Invalid login credentials',
+          text1: 'Login failed',
+          text2: String(res.payload || 'Invalid login credentials'),
         });
         return;
       }
@@ -53,7 +55,14 @@ const Login = ({ navigation }) => {
       }
 
       if (user.role === 'lawyer') {
-        if (!user.registration_fee_paid || !user.deposit_paid) {
+        const hasRegistrationPayment =
+          user.registration_fee_paid ||
+          user.registration_fee_pop_submitted ||
+          user.registration_fee_pop ||
+          user.registration_pop ||
+          user.proof_of_payment;
+
+        if (!hasRegistrationPayment) {
           navigation.navigate('PayRegistration');
           return;
         }
@@ -69,9 +78,16 @@ const Login = ({ navigation }) => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.formContainer}>
-        <Text style={styles.title}>Login</Text>
+    <View style={styles.screen}>
+      <AppTopBar showBack />
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.formContainer}>
+          <Text style={styles.eyebrow}>Welcome back</Text>
+          <Text style={styles.title}>Login</Text>
 
         <TextInput
           style={styles.input}
@@ -97,12 +113,21 @@ const Login = ({ navigation }) => {
         <TouchableOpacity onPress={() => navigation.navigate('Registration')}>
           <Text style={styles.link}>Don't have an account? Register</Text>
         </TouchableOpacity>
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: '#f9fafb',
+  },
+  scrollView: {
+    flex: 1,
+    backgroundColor: '#f9fafb',
+  },
   container: {
     flexGrow: 1,
     justifyContent: 'center',
@@ -124,8 +149,16 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 24,
-    textAlign: 'center',
+    marginBottom: 20,
+    color: '#111827',
+  },
+  eyebrow: {
+    color: '#b8860b',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginBottom: 6,
   },
   input: {
     width: '100%',

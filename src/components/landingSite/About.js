@@ -1,11 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ImageBackground, Image } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Navbar from './Navbar';
-import Footer from './Footer';
+import AppTopBar from '../common/AppTopBar';
 
 const About = ({ navigation }) => {
-  const insets = useSafeAreaInsets();
   const values = [
     {
       icon: '🛡️',
@@ -70,14 +68,7 @@ const About = ({ navigation }) => {
 
   return (
     <View style={styles.screen}>
-      <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-        <Image
-          source={require('../../../assets/logo.png')}
-          style={styles.topLogo}
-          resizeMode="contain"
-        />
-        <Text style={styles.topBarTitle}>Legal Suise</Text>
-      </View>
+      <AppTopBar />
       <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
 
       {/* Hero Section */}
@@ -206,20 +197,25 @@ const About = ({ navigation }) => {
       </View>
 
       {/* CTA */}
-      <View style={[styles.section, styles.ctaSection]}>
-        <Text style={styles.ctaTitle}>Ready to Get Started?</Text>
-        <Text style={styles.ctaText}>
-          Join thousands of satisfied clients who found the perfect lawyer on Legal Suise.
-        </Text>
-        <TouchableOpacity
-          style={styles.ctaButton}
-          onPress={() => navigation.navigate('Registration')}
-        >
-          <Text style={styles.ctaButtonText}>Register Now</Text>
-        </TouchableOpacity>
-      </View>
+      <ImageBackground
+        source={require('../../../assets/cta-background.jpeg')}
+        style={styles.ctaBanner}
+        resizeMode="cover"
+      >
+        <View style={styles.ctaOverlay}>
+          <Text style={styles.ctaTitle}>Ready to Get Started?</Text>
+          <Text style={styles.ctaText}>
+            Join thousands of satisfied clients who found the perfect lawyer on Legal Suise.
+          </Text>
+          <TouchableOpacity
+            style={styles.ctaButton}
+            onPress={() => navigation.navigate('Registration')}
+          >
+            <Text style={styles.ctaButtonText}>Join Now</Text>
+          </TouchableOpacity>
+        </View>
+      </ImageBackground>
 
-      <Footer />
       </ScrollView>
       <Navbar />
     </View>
@@ -237,26 +233,6 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingBottom: 72,
-  },
-  topBar: {
-    backgroundColor: 'rgba(17, 24, 39, 0.96)',
-    borderBottomWidth: 1,
-    borderBottomColor: '#374151',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    paddingBottom: 8,
-  },
-  topLogo: {
-    width: 52,
-    height: 24,
-  },
-  topBarTitle: {
-    color: '#fbbf24',
-    fontSize: 18,
-    fontWeight: '700',
-    letterSpacing: 0.3,
   },
   hero: {
     height: 250,
@@ -408,20 +384,29 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     lineHeight: 20,
   },
-  ctaSection: {
-    backgroundColor: '#1e40af',
+  ctaBanner: {
+    height: 300,
+    justifyContent: 'center',
     alignItems: 'center',
   },
+  ctaOverlay: {
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
   ctaTitle: {
-    fontSize: 28,
+    fontSize: 36,
     fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 12,
+    color: '#1e40af',
+    marginBottom: 16,
     textAlign: 'center',
   },
   ctaText: {
     fontSize: 16,
-    color: '#e5e7eb',
+    color: '#374151',
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 24,

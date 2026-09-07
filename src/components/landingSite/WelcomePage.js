@@ -1,11 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, ImageBackground } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Navbar from './Navbar';
-import Footer from './Footer';
+import AppTopBar from '../common/AppTopBar';
 
 const WelcomePage = ({ navigation }) => {
-  const insets = useSafeAreaInsets();
   const services = [
     {
       image: require('../../../assets/criminallaw.jpeg'),
@@ -77,14 +75,7 @@ const WelcomePage = ({ navigation }) => {
 
   return (
     <View style={styles.screen}>
-      <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-        <Image
-          source={require('../../../assets/logo.png')}
-          style={styles.topLogo}
-          resizeMode="contain"
-        />
-        <Text style={styles.topBarTitle}>Legal Suise</Text>
-      </View>
+      <AppTopBar />
       <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
 
       {/* Hero Section */}
@@ -264,7 +255,6 @@ const WelcomePage = ({ navigation }) => {
         </View>
       </ImageBackground>
 
-      <Footer />
       </ScrollView>
       <Navbar />
     </View>
@@ -281,27 +271,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   contentContainer: {
-    paddingBottom: 72,
-  },
-  topBar: {
-    backgroundColor: 'rgba(17, 24, 39, 0.96)',
-    borderBottomWidth: 1,
-    borderBottomColor: '#374151',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    paddingBottom: 8,
-  },
-  topLogo: {
-    width: 52,
-    height: 24,
-  },
-  topBarTitle: {
-    color: '#fbbf24',
-    fontSize: 18,
-    fontWeight: '700',
-    letterSpacing: 0.3,
+    paddingBottom: 88,
   },
   hero: {
     height: 500,

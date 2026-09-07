@@ -1,15 +1,27 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../api/axiosInstance';
+import { setAuth } from './authSlice';
 
 export const fetchreg = createAsyncThunk(
   'sign_up/fetchreg',
-  async (formData, { rejectWithValue }) => {
+  async (formData, { dispatch, rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post('/register', formData);
-      return response.data.user;
+      const response = await axiosInstance.post('/signup', formData, {
+        timeout: 180000,
+      });
+      const { user, token } = response.data;
+      if (user && token) dispatch(setAuth({ user, token }));
+      return user;
     } catch (err) {
-      console.error('Registration API Error:', err.response?.data || err.message);
-      return rejectWithValue(err.response?.data || { message: err.message });
+      const responseData = err.response?.data;
+      const message =
+        responseData?.message ||
+        responseData?.error ||
+        (Array.isArray(responseData?.errors) ? responseData.errors.join(', ') : null) ||
+        err.message;
+
+      console.error('Registration API Error:', responseData || err.message);
+      return rejectWithValue(responseData || { message });
     }
   }
 );

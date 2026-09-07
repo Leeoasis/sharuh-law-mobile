@@ -49,10 +49,13 @@ const authSlice = createSlice(
     setAuth: (state, action) => {
       const { user, token } = action.payload;
       state.user = user;
-      state.token = token;
       state.isAuthenticated = true;
-      AsyncStorage.setItem('token', token);
       AsyncStorage.setItem('data', JSON.stringify(user));
+
+      if (token) {
+        state.token = token;
+        AsyncStorage.setItem('token', token);
+      }
     },
 
     logout: (state) => {
