@@ -5,6 +5,22 @@ import { fetchlogin } from '../../redux/auth/loginSlice';
 import Toast from 'react-native-toast-message';
 import AppTopBar from '../common/AppTopBar';
 
+const hasLawyerRegistrationPayment = (user) => {
+  if (!user) return false;
+
+  const popStatus = user.registration_fee_pop_status;
+  const hasSubmittedPop = popStatus && ['pending_review', 'verified'].includes(popStatus);
+
+  return Boolean(
+    user.registration_fee_paid ||
+      hasSubmittedPop ||
+      user.registration_fee_pop_url ||
+      user.registration_fee_pop ||
+      user.registration_pop ||
+      user.proof_of_payment
+  );
+};
+
 const Login = ({ navigation }) => {
   const [formData, setFormData] = useState({
     email: '',
@@ -55,14 +71,7 @@ const Login = ({ navigation }) => {
       }
 
       if (user.role === 'lawyer') {
-        const hasRegistrationPayment =
-          user.registration_fee_paid ||
-          user.registration_fee_pop_submitted ||
-          user.registration_fee_pop ||
-          user.registration_pop ||
-          user.proof_of_payment;
-
-        if (!hasRegistrationPayment) {
+        if (!hasLawyerRegistrationPayment(user)) {
           navigation.navigate('PayRegistration');
           return;
         }

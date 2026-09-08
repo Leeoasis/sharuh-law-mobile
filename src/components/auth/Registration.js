@@ -425,9 +425,9 @@ const Registration = ({ navigation }) => {
           <>
             <Text style={styles.sectionTitle}>Lawyer Information</Text>
             <View style={styles.infoPanel}>
-              <Text style={styles.infoTitle}>FNB collection billing</Text>
+              <Text style={styles.infoTitle}>Practitioner subscription</Text>
               <Text style={styles.infoText}>
-                Select the referral package you want FNB to collect as a flat fee from your account at month end.
+                Select a platform tier and complete the payment mandate. Subscription fees do not guarantee work or a client mandate.
               </Text>
             </View>
             <View style={styles.pickerContainer}>

@@ -7,6 +7,7 @@ import AppTopBar from '../common/AppTopBar';
 import { toSafeUploadAsset, validateUploadAsset } from '../../utils/uploadSecurity';
 
 const REGISTRATION_FEE = 250;
+const REGISTRATION_FEE_CENTS = REGISTRATION_FEE * 100;
 const REFERRAL_PLANS = [
   { key: 'basic', label: 'Basic Platform - up to 10 enquiries', amount: 1500 },
   { key: 'classic', label: 'Classic Platform - up to 20 enquiries', amount: 2500 },
@@ -67,7 +68,7 @@ const PayRegistration = () => {
       const data = new FormData();
       data.append('payment[registration_fee_pop]', uploadFile);
       data.append('payment[fnb_referral_plan]', selectedPlan);
-      data.append('payment[registration_fee_amount]', String(REGISTRATION_FEE));
+      data.append('payment[registration_fee_amount]', String(REGISTRATION_FEE_CENTS));
       await axiosInstance.post('/pay_registration_fee/eft_pop', data);
       Toast.show({ type: 'success', text1: 'POP submitted for review' });
     } catch (error) {
@@ -105,12 +106,12 @@ const PayRegistration = () => {
         <Text style={styles.title}>Lawyer Payment Setup</Text>
         <Text style={styles.message}>
           Pay the registration fee by EFT, upload your POP, and choose the FNB collection package
-          for month-end referral billing.
+          for the selected platform subscription.
         </Text>
 
         <View style={styles.summary}>
           <View style={styles.row}><Text>Registration fee</Text><Text>R{REGISTRATION_FEE}</Text></View>
-          <Text style={styles.hint}>FNB will collect your selected flat referral fee from your account at month end.</Text>
+          <Text style={styles.hint}>Payment is collected under the Practitioner Agreement and selected platform tier.</Text>
           {REFERRAL_PLANS.map((plan) => (
             <TouchableOpacity
               key={plan.key}

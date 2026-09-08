@@ -21,14 +21,25 @@ import LawyerDashboard from '../components/dashboards/LawyerDashboard';
 
 const Stack = createStackNavigator();
 
+const hasLawyerRegistrationPayment = (user) => {
+  if (!user) return false;
+
+  const popStatus = user.registration_fee_pop_status;
+  const hasSubmittedPop = popStatus && ['pending_review', 'verified'].includes(popStatus);
+
+  return Boolean(
+    user.registration_fee_paid ||
+      hasSubmittedPop ||
+      user.registration_fee_pop_url ||
+      user.registration_fee_pop ||
+      user.registration_pop ||
+      user.proof_of_payment
+  );
+};
+
 export default function AppNavigator() {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
-  const lawyerHasRegistrationPayment =
-    user?.registration_fee_paid ||
-    user?.registration_fee_pop_submitted ||
-    user?.registration_fee_pop ||
-    user?.registration_pop ||
-    user?.proof_of_payment;
+  const lawyerHasRegistrationPayment = hasLawyerRegistrationPayment(user);
 
   return (
     <NavigationContainer>

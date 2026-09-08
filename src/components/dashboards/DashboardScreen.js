@@ -495,7 +495,7 @@ function BillingPanel({ profile, collectionPlan, setCollectionPlan, dispatch, lo
   };
 
   return <View>
-    <Text style={styles.sectionTitle}>FNB Collection Billing</Text>
+    <Text style={styles.sectionTitle}>Practitioner subscription</Text>
     <View style={styles.card}>
       <Text style={styles.balance}>R {activePlan.amount}</Text>
       <Text style={styles.meta}>{activePlan.label}</Text>
@@ -517,7 +517,7 @@ function BillingPanel({ profile, collectionPlan, setCollectionPlan, dispatch, lo
 
     <View style={styles.card}>
       <Text style={styles.cardTitle}>Debit mandate</Text>
-      <Text style={styles.body}>I authorize FNB collection of the selected month-end referral fee from my nominated attorney account.</Text>
+      <Text style={styles.body}>I authorise LEGAL SUISE and its payment providers to collect lawful fees under the selected platform tier.</Text>
       <Button title={mandateAccepted ? 'Mandate Accepted' : 'Accept Debit Mandate'} disabled={savingMandate || mandateAccepted} onPress={acceptMandate} />
     </View>
 
