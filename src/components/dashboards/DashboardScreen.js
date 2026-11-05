@@ -18,6 +18,7 @@ import { Calendar } from 'react-native-calendars';
 import { useDispatch, useSelector } from 'react-redux';
 import Toast from 'react-native-toast-message';
 import axiosInstance from '../../api/axiosInstance';
+import { openSecureDocument } from '../../utils/openSecureDocument';
 import { logout } from '../../redux/actions/logout';
 import {
   approveLawyer,
@@ -605,7 +606,7 @@ export default function DashboardScreen({ role }) {
     if (tab === 'Home') return <DashboardHome role={role} profile={profile} cases={cases} availableCases={availableCases} lawyers={lawyers} notifications={notifications} setTab={setTab} />;
     if (tab === 'Cases') return <ClientCases profile={profile} cases={cases} dispatch={dispatch} loading={caseLoading} />;
     if (tab === 'My Cases') return <View><Text style={styles.sectionTitle}>Case Management</Text>{!cases.length ? <Empty>No accepted cases yet.</Empty> : cases.filter((item) => item.status === 'claimed').map((item) => <CaseCard key={item.id} item={item} actions={item.platform_fee_status === 'pending' ? <Text style={styles.meta}>Fee will be included in FNB month-end collection.</Text> : null} />)}</View>;
-    if (tab === 'Available') return <View><Text style={styles.sectionTitle}>Available Cases</Text>{!availableCases.length ? <Empty>No matching open cases.</Empty> : availableCases.map((item) => <CaseCard key={item.id} item={item} actions={<Button title="Accept Case" onPress={() => setFeeCase(item)} />} />)}</View>;
+    if (tab === 'Available') return <View><Text style={styles.sectionTitle}>Available Cases</Text>{!availableCases.length ? <Empty>No matching open cases.</Empty> : availableCases.map((item) => <CaseCard key={item.id} item={item} actions={item.quotation_workflow ? <Text style={styles.body}>Client selection required. Respond to quotation requests in the web workspace.</Text> : <Button title="Accept Case" onPress={() => setFeeCase(item)} />} />)}</View>;
     if (tab === 'Clients') {
       const ids = cases.filter((item) => item.status === 'claimed').map((item) => item.client_id);
       const visible = clients.filter((item) => ids.includes(item.id));
@@ -624,7 +625,7 @@ export default function DashboardScreen({ role }) {
           await dispatch(fetchLawyers()); showSuccess(`Application ${approved ? 'approved' : 'rejected'}`);
         } catch (error) { showError(error); }
       } }]);
-      const openDoc = (value) => { if (!value) return; const path = value.replace(/^https?:\/\/[^/]+/, ''); Linking.openURL(`${axiosInstance.defaults.baseURL}${path.startsWith('/') ? path : `/${path}`}`); };
+      const openDoc = async (value) => { if (!value) return; try { await openSecureDocument(value); } catch (error) { showError(error.message || 'Unable to download document'); } };
       const verifyPop = async (lawyer, status) => {
         try {
           await axiosInstance.post(`/api/users/${lawyer.id}/registration_pop`, { payment: { status } });
